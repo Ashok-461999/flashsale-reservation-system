@@ -11,8 +11,14 @@ public class ReservationController {
     @Autowired
     private ReservationService service;
 
-    @GetMapping
+    @PostMapping
     public String reserve(@RequestParam String productId) {
         return service.reserve(productId);
     }
+
+    @PostMapping("/init")
+    public String init(@RequestParam String productId, @RequestParam int quantity) {
+        return service.initStock(productId,quantity);
+    }
+
 }
