@@ -1,27 +1,31 @@
 package com.flashsale.reservation_system.service;
 
+import com.flashsale.reservation_system.event.ReservationConfirmed;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class ReservationService {
 
     private static final long NOT_INITIALIZED_CODE = -2L;
     private static final long SOLD_OUT_CODE = -1L;
-
+    private final KafkaTemplate <String, Object> kafkaTemplate;
     private final RedisTemplate<String, String> redisTemplate;
     private final DefaultRedisScript<Long> reserveScript;
 
-    public ReservationService(RedisTemplate<String, String> redisTemplate,
-                              DefaultRedisScript<Long> reserveScript) {
+    public ReservationService( KafkaTemplate < String, Object > kafkaTemplate, RedisTemplate<String, String> redisTemplate,
+                               DefaultRedisScript<Long> reserveScript) {
+        this.kafkaTemplate = kafkaTemplate;
         this.redisTemplate = redisTemplate;
         this.reserveScript = reserveScript;
     }
 
-    public ReserveResult reserve(String productId) {
+    public ReserveResult reserve(String productId,String userId) {
         if (productId == null || productId.isBlank()) {
             return ReserveResult.error("productId must not be blank");
         }
@@ -38,6 +42,9 @@ public class ReservationService {
         if (result == SOLD_OUT_CODE) {
             return ReserveResult.soldOut(productId);
         }
+        ReservationConfirmed event = new ReservationConfirmed( UUID.randomUUID ().toString (), productId,userId,1,result,System.currentTimeMillis() );
+        kafkaTemplate.send("reservations", productId, event);
+
         return ReserveResult.success(productId, result);
     }
 

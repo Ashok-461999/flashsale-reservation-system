@@ -48,7 +48,7 @@ class ReservationConcurrencyTest {
             executor.submit(() -> {
                 try {
                     startGate.await();
-                    ReserveResult result = service.reserve(productId);
+                    ReserveResult result = service.reserve(productId,"test");
                     if (result.status() == ReserveResult.Status.SUCCESS) {
                         successes.incrementAndGet();
                     } else if (result.status() == ReserveResult.Status.SOLD_OUT) {

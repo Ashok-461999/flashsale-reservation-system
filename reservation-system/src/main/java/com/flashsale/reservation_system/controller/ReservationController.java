@@ -20,8 +20,10 @@ public class ReservationController {
     }
 
     @PostMapping
-    public ResponseEntity<ReserveResult> reserve(@RequestParam String productId) {
-        ReserveResult result = service.reserve(productId);
+    public ResponseEntity<ReserveResult> reserve(
+            @RequestParam String productId,
+            @RequestParam(defaultValue = "anonymous") String userId) {
+        ReserveResult result = service.reserve(productId, userId);
         HttpStatus status = switch (result.status()) {
             case SUCCESS         -> HttpStatus.OK;
             case SOLD_OUT        -> HttpStatus.CONFLICT;
